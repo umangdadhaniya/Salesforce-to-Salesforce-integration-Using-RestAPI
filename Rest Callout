@@ -1,0 +1,94 @@
+//Description: Rest Callout
+
+public class sendCaseUsingRestApi {
+    
+    Private string cKey;
+    Private string cSecret;
+    Private string uName;
+    Private string passwd;
+    public string instanceURL;
+    Private string grantType;
+
+    public sendCaseUsingRestApi () {
+
+    }    
+    public class responseWrapper {
+        
+        public string id;
+        public string access_token;
+        public string instance_url;
+    }
+    
+    public responseWrapper getRequestToken() {
+        
+        List < Store_Cred__mdt > connectionParam = [SELECT Id, client_id__c, client_secret__c, username__c, password__c from Store_Cred__mdt];
+        
+        if(connectionParam.size() >0){
+            
+            cKey=connectionParam[0].client_id__c;
+            
+            cSecret=connectionParam[0].client_secret__c;
+            
+            uName=connectionParam[0].username__c;
+            
+            passwd=connectionParam[0].password__c ;
+            
+        }
+        grantType = 'password';
+        System.debug('Store_Cred__mdt' + connectionParam);
+        //string reqBody = '{"grant_type" : "'+grantType+'","client_id" : "'+ cKey +'","client_secret" : "'+ cSecret +'","username" : "'+ uName +'","password" : "'+ passwd +'"}';
+        string reqBody = 'grant_type=password&client_id=' + cKey + '&client_secret=' + cSecret + '&username=' + uName + '&password=' + passwd;
+        Http h = new Http();
+        HttpRequest req = new HttpRequest();       
+        req.setBody(reqBody);
+        req.setMethod('POST'); 
+        req.setEndpoint(https://login.salesforce.com/services/oauth2/token');
+        HttpResponse hresp = h.send(req);
+        responseWrapper wResp = (responseWrapper)JSON.deserialize(hresp.getBody(),responseWrapper.class);
+        system.debug('reqBody '+reqBody );
+        system.debug('wResp'+wResp );
+        system.debug('Instance url' + wResp.instance_url);
+        system.debug('session id' + wResp.access_token);
+        
+        
+        return wResp;
+    }
+    public static void sendaccount(){
+        string accessToken;
+        String instanceUrl;
+        
+        sendCaseUsingRestApi account2 = new sendCaseUsingRestApi();
+        responseWrapper obj1= account2.getRequestToken();
+        accessToken = obj1.access_token;
+        // list < account > accList = new list < account > ();
+        instanceUrl = obj1.instance_url;
+        string Endpoint = instanceURL+'/services/apexrest/createAccountRecord';
+        system.debug('endPoint--'+Endpoint );
+        system.debug('access token--' + accessToken);
+        
+        if(accessToken !=null){
+            {
+                //for (Account acc: [SELECT Id,Name from account where id in: accIdSet]) {
+                
+                //accList.add(acc);
+                
+            }
+            Http h2 = new Http();
+            HttpRequest request2 = new HttpRequest();
+            request2.setHeader('Authorization','Bearer ' + accessToken);
+            request2.setHeader('content-Type','application/json');
+            request2.setHeader('accept','application/json');
+            request2.setMethod('POST');
+            String body = '{"Name" : "Test"}';
+            request2.setBody(body);
+            // request2.setBody(JSON.serialize(accList));
+            request2.setEndpoint(Endpoint);
+            HttpResponse res1 = h2.send(request2);
+            system.debug('res1--'+res1 );
+            system.debug('res1.getStatusCode--'+res1.getStatusCode());
+            system.debug('res1.getBody--'+res1.getBody());
+            
+            
+        }
+    }
+}
