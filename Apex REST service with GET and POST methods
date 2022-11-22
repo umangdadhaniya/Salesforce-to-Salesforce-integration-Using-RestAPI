@@ -1,0 +1,39 @@
+/*********************************************************************
+
+* Description - Apex REST service with GET and POST methods
+
+* Author - Umang Dadhaniya
+* https://www.linkedin.com/in/umang-dadhaniya-958640150/
+
+<u>Json format</u>
+
+
+***********************************************************************/
+
+@RestResource(urlMapping='/createAccountRecord/*')
+
+   global with sharing class createAccountRecord {
+
+     @HttpPost
+
+      global Static string createAccount(){
+
+      RestRequest req = RestContext.request;
+
+      RestResponse res = Restcontext.response;
+
+      string jsonString=req.requestBody.tostring();
+
+      system.debug('jsonString'+jsonString);
+
+      account a = (account)JSON.deserialize(jsonString, account.class);
+        try{
+            insert a;
+            return 'Account created';
+        }
+        catch(Exception ex){
+            return ex.getMessage();
+        }
+
+   }
+   }
